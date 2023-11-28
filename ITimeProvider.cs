@@ -9,4 +9,12 @@ namespace CustomProgram
         double GetCurrentTime();
     }
 
+    public class RealTimeProvider : ITimeProvider
+    {
+        // This method returns the current time using Raylib's GetTime method.
+        public double GetCurrentTime()
+        {
+            return Raylib.GetTime();
+        }
+    }
 }

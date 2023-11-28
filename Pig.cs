@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace CustomProgram
 {
-    public abstract class Pig : Animal
+    public class Pig : Animal
     {
         public Pig(string _name, float _purchasePrice, string _defaultImagePath, ITimeProvider _timeProvider):base(_name, _purchasePrice, _defaultImagePath, _timeProvider)
         {

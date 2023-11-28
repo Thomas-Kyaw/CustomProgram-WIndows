@@ -72,5 +72,63 @@ namespace CustomProgram
                 // Handle other types of IBuyable if necessary
             }
         }
+
+        public void PopulateWithStartingStock(ITimeProvider timeProvider)
+        {
+            foreach (var animalType in animalStock.Keys)
+            {
+                int stockCount = animalStock[animalType];
+                for (int i = 0; i < stockCount; i++)
+                {
+                    IBuyable item = CreateAnimal(animalType, timeProvider);
+                    itemsForSale.Add(item);
+                }
+            }
+        }
+        private Dictionary<Type, int> animalCounts = new Dictionary<Type, int>();
+
+        private IBuyable CreateAnimal(Type animalType, ITimeProvider timeProvider)
+        {
+            // Initialize the count for the animal type if it doesn't exist
+            if (!animalCounts.ContainsKey(animalType))
+            {
+                animalCounts[animalType] = 0;
+            }
+
+            // Retrieve the current count for the animal type
+            int count = animalCounts[animalType];
+
+            // Increment the count for the next time an animal of this type is created
+            animalCounts[animalType] = count + 1;
+
+            // Create a unique name for the animal using the count
+            string uniqueName = $"{animalType.Name} #{count}";
+
+            // Now create the animal instance with the unique name
+            IBuyable animal;
+            switch (animalType.Name)
+            {
+                case nameof(Cow):
+                    animal = new Cow(uniqueName, 150.0f, "assets/Cow.png", timeProvider);
+                    break;
+                case nameof(Sheep):
+                    animal = new Sheep(uniqueName, 120.0f, "assets/Sheep.png", timeProvider);
+                    break;
+                case nameof(Chicken):
+                    animal = new Chicken(uniqueName, 80.0f, "assets/Chicken.png", timeProvider);
+                    break;
+                case nameof(Pig):
+                    animal = new Pig(uniqueName, 130.0f, "assets/Pig.png", timeProvider);
+                    break;
+                case nameof(Goat):
+                    animal = new Goat(uniqueName, 110.0f, "assets/Goat.png", timeProvider);
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported animal type", nameof(animalType));
+            }
+
+            return animal;
+        }
+
     }
 }

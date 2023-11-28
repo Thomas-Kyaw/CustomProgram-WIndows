@@ -6,12 +6,11 @@ namespace CustomProgram
 {
     public class Game
     {
-        static GameState currentState = GameState.MainGame;
-        static Player player = new Player("Bruh");
-        static Shop shop = new Shop();
+        static GameState currentState = GameState.MainGame;   
 
         public static void Main()
         {
+            GameManager gameManager = new GameManager("PlayerName");
             const int screenWidth = 650;
             const int screenHeight = 600;
             Raylib.InitWindow(screenWidth, screenHeight, "Farm Management Game");
@@ -59,7 +58,7 @@ namespace CustomProgram
                     offsetY + i * (buttonSize + verticalSpacing)
                 );
             }
-
+            // TODO - Need to set the plot in game manager
             while (!Raylib.WindowShouldClose())
             {
                 // Check if the Escape key is pressed to return to the main game state
@@ -174,7 +173,7 @@ namespace CustomProgram
             {
                 case GameState.ShopAnimals:
                     // Render shop animals overlay
-                    DrawShopAnimalsOverlay(shop, player);
+                    //DrawShopAnimalsOverlay(shop, player);
                     break;
                 case GameState.BuyFeed:
                     // Render bag overlay
@@ -187,9 +186,6 @@ namespace CustomProgram
         }
         static void DrawShopAnimalsOverlay(Shop shop, Player player)
         {
-            TestTimeProvider newTestTime = new TestTimeProvider();
-            Animal testAnimal = new Cow("Moo", 1.0f, "", newTestTime);
-            shop.itemsForSale.Add(testAnimal);
             // Draw the overlay background
             Raylib.DrawRectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), new Color(0, 0, 0, 128));
 
