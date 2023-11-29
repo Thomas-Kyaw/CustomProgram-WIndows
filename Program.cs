@@ -6,11 +6,12 @@ namespace CustomProgram
 {
     public class Game
     {
-        static GameState currentState = GameState.MainGame;   
+        static GameState currentState = GameState.MainGame;
+        static GameManager gameManager;
 
         public static void Main()
         {
-            GameManager gameManager = new GameManager("PlayerName");
+            gameManager = new GameManager("PlayerName");
             const int screenWidth = 650;
             const int screenHeight = 600;
             Raylib.InitWindow(screenWidth, screenHeight, "Farm Management Game");
@@ -18,19 +19,9 @@ namespace CustomProgram
 
             Raylib.SetExitKey(KeyboardKey.KEY_NULL);
 
+            gameManager.LoadTextures();
             Color textColor = Color.WHITE;
-
-            Texture2D backgroundTexture = Raylib.LoadTexture("assets/BackGroundGrass.png");
-            Texture2D cowTexture = Raylib.LoadTexture("assets/CowPlot.png");
-            Texture2D chickenTexture = Raylib.LoadTexture("assets/ChickenPlot.png");
-            Texture2D pigTexture = Raylib.LoadTexture("assets/PigPlot.png");
-            Texture2D goatTexture = Raylib.LoadTexture("assets/GoatPlot.png");
-            Texture2D sheepTexture = Raylib.LoadTexture("assets/SheepPlot.png");
-            Texture2D shopAnimalTexture = Raylib.LoadTexture("assets/ShopAnimal.png");
-            Texture2D buyFeedTexture = Raylib.LoadTexture("assets/BuyFeed.png");
-            Texture2D sellMarketTexture = Raylib.LoadTexture("assets/SellMarket.png");
-            Texture2D inventoryTexture = Raylib.LoadTexture("assets/Inventory.png");
-
+            
             int plotSize = 150;
             int plotSpacing = 20;
             int buttonSize = 50;
@@ -104,15 +95,15 @@ namespace CustomProgram
                 if (currentState == GameState.MainGame)
                 {
                     // Draw the background texture tiled
-                    for (int y = 0; y < screenHeight; y += backgroundTexture.Height)
+                    for (int y = 0; y < screenHeight; y += gameManager.backgroundTexture.Height)
                     {
-                        for (int x = 0; x < screenWidth; x += backgroundTexture.Width)
+                        for (int x = 0; x < screenWidth; x += gameManager.backgroundTexture.Width)
                         {
-                            Raylib.DrawTexture(backgroundTexture, x, y, Color.WHITE);
+                            Raylib.DrawTexture(gameManager.backgroundTexture, x, y, Color.WHITE);
                         }
                     }
                     
-                    Texture2D[] textures = { cowTexture, chickenTexture, pigTexture, goatTexture, sheepTexture, shopAnimalTexture, buyFeedTexture, sellMarketTexture, inventoryTexture };
+                    Texture2D[] textures = { gameManager.cowTexture, gameManager.chickenTexture, gameManager.pigTexture, gameManager.goatTexture, gameManager.sheepTexture, gameManager.shopAnimalTexture, gameManager.buyFeedTexture, gameManager.sellMarketTexture, gameManager.inventoryTexture };
                     string[] plotNames = { "Cow", "Chicken", "Pig", "Goat", "Sheep", "Shop Animals", "Buy Feed", "Sell Produce", "Inventory" };
 
                     for (int i = 0; i < plotPositions.Length; i++)
@@ -148,18 +139,7 @@ namespace CustomProgram
                 Raylib.EndDrawing();
             }
 
-            // Unload textures
-            Raylib.UnloadTexture(backgroundTexture);
-            Raylib.UnloadTexture(cowTexture);
-            Raylib.UnloadTexture(chickenTexture);
-            Raylib.UnloadTexture(pigTexture);
-            Raylib.UnloadTexture(goatTexture);
-            Raylib.UnloadTexture(sheepTexture);
-            Raylib.UnloadTexture(shopAnimalTexture);
-            Raylib.UnloadTexture(buyFeedTexture);
-            Raylib.UnloadTexture(sellMarketTexture);
-            Raylib.UnloadTexture(inventoryTexture);
-
+            gameManager.UnloadTextures();
             // De-Initialization
             Raylib.CloseWindow();
         }
@@ -173,12 +153,17 @@ namespace CustomProgram
             {
                 case GameState.ShopAnimals:
                     // Render shop animals overlay
-                    //DrawShopAnimalsOverlay(shop, player);
+                    DrawShopAnimalsOverlay(gameManager.Shop, gameManager.Player);
                     break;
                 case GameState.BuyFeed:
                     // Render bag overlay
                     break;
-                // ... handle other cases
+                case GameState.SellProduce:
+                    // Render bag overlay
+                    break;
+                case GameState.Inventory:
+                    // Render bag overlay
+                    break;
                 default:
                     break;
             }

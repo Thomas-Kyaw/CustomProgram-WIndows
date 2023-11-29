@@ -13,13 +13,13 @@ namespace CustomProgram
 
             // Initialize animal stock
             animalStock = new Dictionary<Type, int>
-        {
-            { typeof(Cow), 10 }, 
-            { typeof(Chicken), 20 },
-            { typeof(Sheep), 7 },
-            { typeof(Goat), 8 },
-            { typeof(Pig), 12 }
-        };
+            {
+                { typeof(Cow), 10 }, 
+                { typeof(Chicken), 20 },
+                { typeof(Sheep), 7 },
+                { typeof(Goat), 8 },
+                { typeof(Pig), 12 }
+            };
         }
 
         public int GetStockForAnimal(Type animalType)
@@ -74,6 +74,12 @@ namespace CustomProgram
         }
 
         public void PopulateWithStartingStock(ITimeProvider timeProvider)
+        {
+            PopulateAnimalsWithStartingStock(timeProvider);
+            PopulateFeedsWithStartingStock();
+        }
+
+        public void PopulateAnimalsWithStartingStock(ITimeProvider timeProvider)
         {
             foreach (var animalType in animalStock.Keys)
             {
@@ -130,5 +136,25 @@ namespace CustomProgram
             return animal;
         }
 
+        private void PopulateFeedsWithStartingStock()
+        {
+            // Add feed items for each feed type with a specific quantity
+            int quantityForEachFeed = 20; // Example quantity
+            foreach (FeedType feedType in Enum.GetValues(typeof(FeedType)))
+            {
+                for (int i = 0; i < quantityForEachFeed; i++)
+                {
+                    IBuyable feedItem = CreateFeed(feedType);
+                    itemsForSale.Add(feedItem);
+                }
+            }
+        }
+
+        private IBuyable CreateFeed(FeedType feedType)
+        {
+            string name = $"{feedType} Feed"; // Example naming convention
+            float price = 50.0f; // Example price, can be different for each type
+            return new Feed(name, price, feedType);
+        }
     }
 }

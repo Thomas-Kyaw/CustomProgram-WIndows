@@ -7,7 +7,10 @@ namespace CustomProgram
     public class Plot
     {
         private Player owner;
-        private Vector2 size { get; set; }
+
+        private int size;
+        
+        private Vector2 position;
         private string imagePath { get;  set; }
         protected List<Animal> animals { get; set; }
         private int animalLimit { get; set; }
@@ -25,6 +28,20 @@ namespace CustomProgram
         public List<Animal> Animals
         {
             get{return animals;}
+        }
+        public Vector2 Posiiton
+        {
+            get { return position; }
+            set { position = value; }
+        }
+        public int Size
+        {
+            get { return size; }
+            set { Size = value; }
+        }
+        public PlotType Type
+        {
+            get { return type; }
         }
         private void SetAnimalLimitAndImagePath(PlotType type)
         {
