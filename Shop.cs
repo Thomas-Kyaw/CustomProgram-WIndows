@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace CustomProgram
 {
     public class Shop
@@ -10,12 +13,15 @@ namespace CustomProgram
         {
             produceAvailable = new List<ISellable>();
             itemsForSale = new List<IBuyable>();
+            InitializeAnimalStock();
+        }
 
-            // Initialize animal stock
+        private void InitializeAnimalStock()
+        {
             animalStock = new Dictionary<Type, int>
             {
-                { typeof(Cow), 10 }, 
-                { typeof(Chicken), 20 },
+                { typeof(Cow), 10 },
+                { typeof(Chicken), 15 },
                 { typeof(Sheep), 7 },
                 { typeof(Goat), 8 },
                 { typeof(Pig), 12 }
@@ -47,50 +53,53 @@ namespace CustomProgram
 
                 if (item is Animal animal)
                 {
-                    int stock = GetStockForAnimal(animal.GetType());
-                    if (stock > 0)
-                    {
-                        player.Coins -= item.purchasePrice;
-                        foreach (var plot in player.Plots)
-                        {
-                            if (plot.AddAnimal(animal))
-                            {
-                                animalStock[animal.GetType()]--;
-                                return;
-                            }
-                        }
-                        // Handle case where no plot is available
-                    }
-                    // Handle case where stock is 0
+                    HandleAnimalPurchase(animal, player);
                 }
-                else if (item is Feed feed)
+                else if (item is Feed)
                 {
-                    // Add feed to player's inventory
-                    player.Inventory.AddBuyableItem(feed);
-                    return;
+                    // Unlimited feed stock, no need to check or update stock
+                    player.Inventory.AddBuyableItem(item);
                 }
-                // Handle other types of IBuyable if necessary
+                // Other types of IBuyable items can be handled here if necessary
             }
+        }
+
+        private void HandleAnimalPurchase(Animal animal, Player player)
+        {
+            int stock = GetStockForAnimal(animal.GetType());
+            if (stock > 0)
+            {
+                foreach (var plot in player.Plots)
+                {
+                    if (plot.AddAnimal(animal))
+                    {
+                        animalStock[animal.GetType()]--;
+                        return;
+                    }
+                }
+                // Handle case where no plot is available
+            }
+            // Handle case where stock is 0
         }
 
         public void PopulateWithStartingStock(ITimeProvider timeProvider)
         {
             PopulateAnimalsWithStartingStock(timeProvider);
-            PopulateFeedsWithStartingStock();
         }
 
-        public void PopulateAnimalsWithStartingStock(ITimeProvider timeProvider)
+        private void PopulateAnimalsWithStartingStock(ITimeProvider timeProvider)
         {
             foreach (var animalType in animalStock.Keys)
             {
                 int stockCount = animalStock[animalType];
                 for (int i = 0; i < stockCount; i++)
                 {
-                    IBuyable item = CreateAnimal(animalType, timeProvider);
-                    itemsForSale.Add(item);
+                    IBuyable animal = CreateAnimal(animalType, timeProvider);
+                    itemsForSale.Add(animal);
                 }
             }
         }
+
         private Dictionary<Type, int> animalCounts = new Dictionary<Type, int>();
 
         private IBuyable CreateAnimal(Type animalType, ITimeProvider timeProvider)
@@ -136,24 +145,10 @@ namespace CustomProgram
             return animal;
         }
 
-        private void PopulateFeedsWithStartingStock()
+        public IBuyable CreateFeed(FeedType feedType)
         {
-            // Add feed items for each feed type with a specific quantity
-            int quantityForEachFeed = 20; // Example quantity
-            foreach (FeedType feedType in Enum.GetValues(typeof(FeedType)))
-            {
-                for (int i = 0; i < quantityForEachFeed; i++)
-                {
-                    IBuyable feedItem = CreateFeed(feedType);
-                    itemsForSale.Add(feedItem);
-                }
-            }
-        }
-
-        private IBuyable CreateFeed(FeedType feedType)
-        {
-            string name = $"{feedType} Feed"; // Example naming convention
-            float price = 50.0f; // Example price, can be different for each type
+            string name = $"{feedType} Feed";
+            float price = 50.0f; // Example price, can vary based on feed type
             return new Feed(name, price, feedType);
         }
     }

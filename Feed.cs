@@ -18,6 +18,8 @@ namespace CustomProgram
             type = _type;
             AssignImagePath(_type);
         }
+        public FeedType Type
+        { get { return type; } }
         private void AssignImagePath(FeedType type)
         {
             switch (type)

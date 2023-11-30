@@ -5,7 +5,7 @@ namespace CustomProgram
 {
     public class Inventory
     {
-        private List<IBuyable> buyableItems; // Animals and Feed
+        private List<IBuyable> buyableItems; // Feed
         private List<ISellable> sellableItems; // Produce
 
         public Inventory()

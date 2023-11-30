@@ -37,7 +37,7 @@ namespace CustomProgram
         public int Size
         {
             get { return size; }
-            set { Size = value; }
+            set { size = value; }
         }
         public PlotType Type
         {

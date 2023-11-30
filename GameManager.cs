@@ -18,15 +18,25 @@ namespace CustomProgram
 
         public Texture2D defaultTexture;
         public Texture2D backgroundTexture;
+        public Texture2D cowPlotTexture;
+        public Texture2D chickenPlotTexture;
+        public Texture2D pigPlotTexture;
+        public Texture2D sheepPlotTexture;
+        public Texture2D goatPlotTexture;
+        public Texture2D shopAnimalTexture;
+        public Texture2D buyFeedTexture;
+        public Texture2D sellMarketTexture;
+        public Texture2D inventoryTexture;
+        public Texture2D cowFeedTexture;
+        public Texture2D pigFeedTexture;
+        public Texture2D sheepFeedTexture;
+        public Texture2D goatFeedTexture;
+        public Texture2D chickenFeedTexture;
         public Texture2D cowTexture;
         public Texture2D chickenTexture;
         public Texture2D pigTexture;
         public Texture2D sheepTexture;
         public Texture2D goatTexture;
-        public Texture2D shopAnimalTexture;
-        public Texture2D buyFeedTexture;
-        public Texture2D sellMarketTexture;
-        public Texture2D inventoryTexture;
 
         public GameManager(string playerName)
         {
@@ -48,8 +58,9 @@ namespace CustomProgram
         private void InitializePlayer()
         {
             // Set up the player's starting resources, inventory, etc.
-            Player.Coins = 1000; // Starting coins
-            Player.Reputation = 100;                     // More player setup...
+            Player.Coins = 10000; // Starting coins
+            Player.Reputation = 100;                    
+
         }
 
         private void InitializeShop()
@@ -60,30 +71,52 @@ namespace CustomProgram
         }
         private void InitializePlot()
         {
-            Plot cowPlot = new Plot(PlotType.CowPlot, Player);
+            int plotSize = 150;
+
+            Plot cowPlot = new Plot(PlotType.CowPlot, Player) { Size = plotSize };
             plots.Add(cowPlot);
-            Plot pigPlot = new Plot(PlotType.PigPlot, Player);
+            Plot pigPlot = new Plot(PlotType.PigPlot, Player) { Size = plotSize };
             plots.Add(pigPlot);
-            Plot sheepPlot = new Plot(PlotType.SheepPlot, Player);
+            Plot sheepPlot = new Plot(PlotType.SheepPlot, Player) { Size = plotSize };
             plots.Add(sheepPlot);
-            Plot goatPlot = new Plot(PlotType.GoatPlot, Player);
+            Plot goatPlot = new Plot(PlotType.GoatPlot, Player) { Size = plotSize };
             plots.Add(goatPlot);
-            Plot chickenPlot = new Plot(PlotType.ChickenPlot, Player);
+            Plot chickenPlot = new Plot(PlotType.ChickenPlot, Player) { Size = plotSize };
             plots.Add(chickenPlot);
+            Player.Plots.Add(cowPlot);
+            Player.Plots.Add(pigPlot);
+            Player.Plots.Add(sheepPlot);
+            Player.Plots.Add(goatPlot);
+            Player.Plots.Add(chickenPlot);
+            // Debug to confirm plot sizes
+            foreach (var plot in Player.Plots)
+            {
+                Console.WriteLine($"Plot Type: {plot.Type}, Size: {plot.Size}");
+            }
         }
         public void LoadTextures()
         {
              defaultTexture = Raylib.LoadTexture("assets/BackGroundGrass.png");
              backgroundTexture = Raylib.LoadTexture("assets/BackGroundGrass.png");
-             cowTexture = Raylib.LoadTexture("assets/CowPlot.png");
-             chickenTexture = Raylib.LoadTexture("assets/ChickenPlot.png");
-             pigTexture = Raylib.LoadTexture("assets/PigPlot.png");
-             goatTexture = Raylib.LoadTexture("assets/GoatPlot.png");
-             sheepTexture = Raylib.LoadTexture("assets/SheepPlot.png");
+             cowPlotTexture = Raylib.LoadTexture("assets/CowPlot.png");
+             chickenPlotTexture = Raylib.LoadTexture("assets/ChickenPlot.png");
+             pigPlotTexture = Raylib.LoadTexture("assets/PigPlot.png");
+             goatPlotTexture = Raylib.LoadTexture("assets/GoatPlot.png");
+             sheepPlotTexture = Raylib.LoadTexture("assets/SheepPlot.png");
              shopAnimalTexture = Raylib.LoadTexture("assets/ShopAnimal.png");
              buyFeedTexture = Raylib.LoadTexture("assets/BuyFeed.png");
              sellMarketTexture = Raylib.LoadTexture("assets/SellMarket.png");
              inventoryTexture = Raylib.LoadTexture("assets/Inventory.png");
+             cowFeedTexture = Raylib.LoadTexture("assets/Radish.png");
+             pigFeedTexture = Raylib.LoadTexture("assets/Taro.png");
+             sheepFeedTexture = Raylib.LoadTexture("assets/Pea.png");
+             goatFeedTexture = Raylib.LoadTexture("assets/Carrot.png");
+             chickenFeedTexture = Raylib.LoadTexture("assets/Corn.png");
+             cowTexture = Raylib.LoadTexture("assets/Cow.png");
+             chickenTexture = Raylib.LoadTexture("assets/Chicken.png");
+             pigTexture = Raylib.LoadTexture("assets/Pig.png");
+             goatTexture = Raylib.LoadTexture("assets/Goat.png");
+             sheepTexture = Raylib.LoadTexture("assets/Sheep.png");
         }
 
         public void UnloadTextures()
@@ -91,15 +124,25 @@ namespace CustomProgram
             // Unload textures
             Raylib.UnloadTexture(defaultTexture);
             Raylib.UnloadTexture(backgroundTexture);
-            Raylib.UnloadTexture(cowTexture);
-            Raylib.UnloadTexture(chickenTexture);
-            Raylib.UnloadTexture(pigTexture);
-            Raylib.UnloadTexture(goatTexture);
-            Raylib.UnloadTexture(sheepTexture);
+            Raylib.UnloadTexture(cowPlotTexture);
+            Raylib.UnloadTexture(chickenPlotTexture);
+            Raylib.UnloadTexture(pigPlotTexture);
+            Raylib.UnloadTexture(goatPlotTexture);
+            Raylib.UnloadTexture(sheepPlotTexture);
             Raylib.UnloadTexture(shopAnimalTexture);
             Raylib.UnloadTexture(buyFeedTexture);
             Raylib.UnloadTexture(sellMarketTexture);
             Raylib.UnloadTexture(inventoryTexture);
+            Raylib.UnloadTexture(cowFeedTexture);
+            Raylib.UnloadTexture(goatFeedTexture);
+            Raylib.UnloadTexture(chickenFeedTexture);
+            Raylib.UnloadTexture(sheepFeedTexture);
+            Raylib.UnloadTexture(pigFeedTexture);
+            Raylib.UnloadTexture(cowTexture);
+            Raylib.UnloadTexture(goatTexture);
+            Raylib.UnloadTexture(chickenTexture);
+            Raylib.UnloadTexture(sheepTexture);
+            Raylib.UnloadTexture(pigTexture);
         }
 
         public void Update()
