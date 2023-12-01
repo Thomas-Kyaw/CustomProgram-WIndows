@@ -48,23 +48,18 @@ namespace CustomProgram
             switch (type)
             {
                 case PlotType.CowPlot:
-                    imagePath = "assets/CowPlot.png";
                     animalLimit = 10;
                     break;
                 case PlotType.ChickenPlot:
-                    imagePath = "assets/ChickenPlot.png";
                     animalLimit = 20;
                     break;
                 case PlotType.SheepPlot:
-                    imagePath = "assets/SheepPlot.png";
                     animalLimit = 7;
                     break;
                 case PlotType.GoatPlot:
-                    imagePath = "assets/GoatPlot.png";
                     animalLimit = 8;
                     break;
                 case PlotType.PigPlot:
-                    imagePath = "assets/PigPlot.png";
                     animalLimit = 12;
                     break;
                 default:
@@ -104,25 +99,28 @@ namespace CustomProgram
             }
         }
 
-        public void RemoveAnimal(Animal animal)
-        {
-            animals.Remove(animal);
-            animal.OnDeath -= RemoveAnimal; // Unsubscribe from the event
-        }
-
         public void UpdateAnimals()
-        {
-            foreach (var animal in new List<Animal>(animals))
+        {     
+            foreach (var animal in new List<Animal>(animals)) // Using a copy to safely modify the original list
             {
                 animal.Update();
-                Console.WriteLine($"Updating animal. Produces count: {animal.Produces.Count}"); // Debug
                 TransferProducesToPlayer(animal);
                 if (!animal.IsAlive)
                 {
+                    Console.WriteLine($"Removing dead animal: {animal.name}");
                     RemoveAnimal(animal);
                 }
             }
         }
+
+        public void RemoveAnimal(Animal animal)
+        {
+            Console.WriteLine($"Removing animal: {animal.name} from plot {Type}");
+            animals.Remove(animal);
+            animal.OnDeath -= RemoveAnimal; // Unsubscribe from the event
+                                            // Additional cleanup if necessary
+        }
+
 
         private void TransferProducesToPlayer(Animal animal)
         {

@@ -55,6 +55,7 @@ namespace CustomProgram
             // TODO - Need to set the plot in game manager
             while (!Raylib.WindowShouldClose())
             {
+                gameManager.Update();
                 // Check if the Escape key is pressed to return to the main game state
                 if (Raylib.IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
@@ -217,32 +218,6 @@ namespace CustomProgram
                     );
                 }
             }
-        }
-
-        public static Vector2 CalculateAnimalPosition(Plot plot, Animal animal, Texture2D animalTexture)
-        {
-            // Avoid potential division by zero
-            if (animalTexture.Width <= 0 || animalTexture.Height <= 0)
-            {
-                throw new InvalidOperationException("Animal texture dimensions must be greater than zero.");
-            }
-
-            int index = plot.Animals.IndexOf(animal);
-            float spacing = 10.0f; // Space between animals
-
-            // Calculate the maximum number of animals per row
-            int animalsPerRow = Math.Max(1, plot.Size / (animalTexture.Width + (int)spacing));
-
-            int row = index / animalsPerRow;
-            int col = index % animalsPerRow;
-
-            float startX = plot.Posiiton.X + (plot.Size - animalsPerRow * animalTexture.Width) / 2; // Center animals horizontally
-            float startY = plot.Posiiton.Y + (plot.Size - animalTexture.Height) / 2; // Center animals vertically
-
-            float x = startX + col * (animalTexture.Width + spacing);
-            float y = startY + row * (animalTexture.Height + spacing);
-
-            return new Vector2(x, y);
         }
 
         // Function to draw the overlay for shopping animals

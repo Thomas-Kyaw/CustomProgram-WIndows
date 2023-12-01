@@ -10,12 +10,13 @@ namespace CustomProgram
         public Goat(string _name, float _purchasePrice, string _defaultImagePath, ITimeProvider _timeProvider):base(_name, _purchasePrice, _defaultImagePath, _timeProvider)
         {
             health = 130f;
+            produceTimer = 21f;
         }
 
         public override void Update()
         {
-            double currentTime = Raylib.GetTime();
-            if (currentTime - lastHungerUpdateTime >= hungerDecrementTime)
+            double currentTime = base.timeProvider.GetCurrentTime();
+            if (currentTime - lastHungerUpdateTime >= hungerDecrementTime && isAlive)
             {
                 hunger -= 9f; // Decrement hunger
                 lastHungerUpdateTime = currentTime; // Reset the last update time
@@ -28,31 +29,30 @@ namespace CustomProgram
             }
 
             // Update produce timer
-            if (currentTime - lastProduceUpdateTime >= produceTimer)
+            if (currentTime - lastProduceUpdateTime >= produceTimer && isAlive)
             {
                 ProduceItem(); // Produce an item
                 lastProduceUpdateTime = currentTime; // Reset the last produce time
             }
 
-            if (health <= 0)
+            if (health <= 0 && isAlive)
             {
-                if (isAlive)
-                {
                     Die(); // Trigger the death of the animal only once
-                }
             }
         }
         public override void ProduceItem()
         {
-            // Randomly decide to produce milk or beef
-            int produceType = random.Next(2); // Generates 0 or 1
+            if (isAlive)
+            {
+                int produceType = random.Next(2); // Generates 0 or 1
+                Produce produce = produceType == 0
+                    ? new Produce("GoatMeat", 55f, ProduceType.GoatMeat)
+                    : new Produce("GoatMilk", 60f, ProduceType.GoatMilk);
 
-            Produce produce = produceType == 0
-                ? new Produce("Goat Milk", 1.5f, ProduceType.GoatMilk)
-                : new Produce("Goat Meat", 5.0f, ProduceType.GoatMeat);
-
-            // Add directly to the produces list for now
-            produces.Add(produce);
+                produces.Add(produce);
+                // Debug statement
+                //Console.WriteLine($"Goat '{name}' produced {produce.name} at {DateTime.Now}. Current Produce Count: {produces.Count}");
+            }
         }
 
         public override void Feed(FeedType feedType)

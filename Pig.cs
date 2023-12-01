@@ -9,12 +9,13 @@ namespace CustomProgram
         public Pig(string _name, float _purchasePrice, string _defaultImagePath, ITimeProvider _timeProvider):base(_name, _purchasePrice, _defaultImagePath, _timeProvider)
         {
             health = 140f;
+            produceTimer = 24f;
         }
 
         public override void Update()
         {
-            double currentTime = Raylib.GetTime();
-            if (currentTime - lastHungerUpdateTime >= hungerDecrementTime)
+            double currentTime = base.timeProvider.GetCurrentTime();
+            if (currentTime - lastHungerUpdateTime >= hungerDecrementTime && isAlive)
             {
                 hunger -= 11f; // Decrement hunger
                 lastHungerUpdateTime = currentTime; // Reset the last update time
@@ -27,24 +28,23 @@ namespace CustomProgram
             }
 
             // Update produce timer
-            if (currentTime - lastProduceUpdateTime >= produceTimer)
+            if (currentTime - lastProduceUpdateTime >= produceTimer && isAlive)
             {
                 ProduceItem(); // Produce an item
                 lastProduceUpdateTime = currentTime; // Reset the last produce time
             }
 
-            if (health <= 0)
+            if (health <= 0 && isAlive)
             {
-                if (isAlive)
-                {
                     Die(); // Trigger the death of the animal only once
-                }
             }
         }
         public override void ProduceItem()
         {
-                Produce pork = new Produce("Pork", 1.5f, ProduceType.Pork);
-                produces.Add(pork);
+            Produce produce = new Produce("Pork", 50f, ProduceType.Pork);
+            produces.Add(produce);
+            // Debug statement
+            //Console.WriteLine($"Pig '{name}' produced {produce.name} at {DateTime.Now}. Current Produce Count: {produces.Count}");
         }
 
         public override void Feed(FeedType feedType)

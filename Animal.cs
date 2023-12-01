@@ -26,7 +26,7 @@ namespace CustomProgram
         protected abstract bool IsCorrectFeedType(FeedType feedType);
         protected abstract float GetFeedValue(FeedType feedType);
 
-        private ITimeProvider timeProvider;
+        protected ITimeProvider timeProvider;
 
         public Animal(string _name, float _purchasePrice, string defaultImagePath, ITimeProvider timeProvider)
         {
@@ -56,19 +56,11 @@ namespace CustomProgram
                 }
             }
 
-            // Update produce timer
-            if (currentTime - lastProduceUpdateTime >= produceTimer)
+            // Check for death
+            if (health <= 0 && isAlive)
             {
-                ProduceItem(); // Produce an item
-                lastProduceUpdateTime = currentTime; // Reset the last produce time
-            }
-
-            if (health <= 0)
-            {
-                if (isAlive)
-                {
-                    Die(); // Trigger the death of the animal only once
-                }
+                health = 0; // Ensure health doesn't go below 0
+                Die();
             }
         }
 
@@ -88,6 +80,7 @@ namespace CustomProgram
         public virtual void Die()
         {
             isAlive = false;
+            Console.WriteLine($"Animal '{name}' has died at {DateTime.Now}."); // Debug message
             // Perform any additional cleanup specific to the animal
             OnDeath?.Invoke(this);
         }

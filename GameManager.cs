@@ -75,24 +75,19 @@ namespace CustomProgram
 
             Plot cowPlot = new Plot(PlotType.CowPlot, Player) { Size = plotSize };
             plots.Add(cowPlot);
-            Plot pigPlot = new Plot(PlotType.PigPlot, Player) { Size = plotSize };
-            plots.Add(pigPlot);
-            Plot sheepPlot = new Plot(PlotType.SheepPlot, Player) { Size = plotSize };
-            plots.Add(sheepPlot);
-            Plot goatPlot = new Plot(PlotType.GoatPlot, Player) { Size = plotSize };
-            plots.Add(goatPlot);
             Plot chickenPlot = new Plot(PlotType.ChickenPlot, Player) { Size = plotSize };
             plots.Add(chickenPlot);
+            Plot pigPlot = new Plot(PlotType.PigPlot, Player) { Size = plotSize };
+            plots.Add(pigPlot);
+            Plot goatPlot = new Plot(PlotType.GoatPlot, Player) { Size = plotSize };
+            plots.Add(goatPlot);
+            Plot sheepPlot = new Plot(PlotType.SheepPlot, Player) { Size = plotSize };
+            plots.Add(sheepPlot);
             Player.Plots.Add(cowPlot);
-            Player.Plots.Add(pigPlot);
-            Player.Plots.Add(sheepPlot);
-            Player.Plots.Add(goatPlot);
             Player.Plots.Add(chickenPlot);
-            // Debug to confirm plot sizes
-            foreach (var plot in Player.Plots)
-            {
-                Console.WriteLine($"Plot Type: {plot.Type}, Size: {plot.Size}");
-            }
+            Player.Plots.Add(pigPlot);
+            Player.Plots.Add(goatPlot);
+            Player.Plots.Add(sheepPlot);
         }
         public void LoadTextures()
         {
@@ -147,10 +142,11 @@ namespace CustomProgram
 
         public void Update()
         {
-            // Update game logic
-            //Player.Update();
-            //Shop.Update();
-            // Any other updates for your game entities
+            // Update logic for each plot
+            foreach (var plot in Player.Plots)
+            {
+                plot.UpdateAnimals();
+            }
         }
 
         public void Render()
