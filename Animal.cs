@@ -105,6 +105,14 @@ namespace CustomProgram
 
         }
 
+        public float Hunger
+        {
+            get { return hunger; }
+        }
+        public float Health
+        {
+            get { return health; }
+        }
         public List<Produce> Produces
         {
             get{return produces;}

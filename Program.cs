@@ -12,6 +12,7 @@ namespace CustomProgram
         static GameManager gameManager;
         static Vector2[] plotPositions;
         static int plotSize = 150;
+        static float scrollY = 0;
         public static void Main()
         {
             gameManager = new GameManager("PlayerName");
@@ -157,6 +158,21 @@ namespace CustomProgram
             // This could be a simple color change, a new set of buttons, information display, etc.
             switch (state)
             {
+                case GameState.Cow:
+                    DrawAnimalFeedOverlay(PlotType.CowPlot ,gameManager.Player);
+                    break;
+                case GameState.Chicken:
+                    DrawAnimalFeedOverlay(PlotType.ChickenPlot, gameManager.Player);
+                    break;
+                case GameState.Pig:
+                    DrawAnimalFeedOverlay(PlotType.PigPlot, gameManager.Player);
+                    break;
+                case GameState.Goat:
+                    DrawAnimalFeedOverlay(PlotType.GoatPlot, gameManager.Player);
+                    break;
+                case GameState.Sheep:
+                    DrawAnimalFeedOverlay(PlotType.SheepPlot, gameManager.Player);
+                    break;
                 case GameState.ShopAnimals:
                     // Render shop animals overlay
                     DrawShopAnimalsOverlay(gameManager.Shop, gameManager.Player);
@@ -220,13 +236,88 @@ namespace CustomProgram
             }
         }
 
+        static float scrollYFeedOverlay = 0;
+
+        static void DrawAnimalFeedOverlay(PlotType plotType, Player player)
+        {
+            // Overlay background
+            Raylib.DrawRectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), new Color(0, 0, 0, 128));
+            int extraTopPadding = 50; // Extra space to avoid overlap with the close button
+            // Fetch all animals from the selected plot type
+            List<Animal> animals = player.Plots.FirstOrDefault(p => p.Type == plotType)?.Animals;
+
+            // Ensure there are animals to display
+            if (animals != null && animals.Any())
+            {
+                // Handle mouse wheel scroll for the feed overlay
+                float mouseWheelMove = Raylib.GetMouseWheelMove();
+                scrollYFeedOverlay -= mouseWheelMove * 20; // Scroll speed, adjust as necessary
+
+                // Calculate the total content height and padding
+                int itemHeight = 100; // Height of each item (animal + feed button)
+                int padding = 10; // Padding between items
+                float contentHeight = animals.Count * (itemHeight + padding) + padding + extraTopPadding; // Total height of the content
+
+                // Clamp scrollY to prevent scrolling beyond the content
+                float maxScroll = contentHeight - Raylib.GetScreenHeight();
+                scrollYFeedOverlay = Math.Clamp(scrollYFeedOverlay, 0, maxScroll);
+
+                // Start Y position, adjusted by the current scroll position and extra top padding
+                int startY = padding + extraTopPadding - (int)scrollYFeedOverlay;
+
+                // Draw each animal's information and feed button
+                foreach (var animal in animals)
+                {
+                    DrawAnimalInfoAndFeedButton(animal, padding, startY, player);
+                    startY += itemHeight + padding; // Move to the next item position
+                }
+            }
+            else
+            {
+                Raylib.DrawText("No animals in this plot type.", 50, extraTopPadding + 50, 20, Color.WHITE);
+            }
+
+            DrawCloseButton();
+        }
+        static void DrawAnimalInfoAndFeedButton(Animal animal, int startX, int startY, Player player)
+        {
+            // Background for animal info
+            Rectangle infoRect = new Rectangle(startX, startY, 350, 100); // Adjust width and height as needed
+            Raylib.DrawRectangleRec(infoRect, new Color(169, 169, 169, 255)); // Light grey background
+            Raylib.DrawRectangleLinesEx(infoRect, 2, Color.BLACK); // Black border for the info rectangle
+
+            // Animal information text
+            string infoText = $"{animal.name} - Health: {animal.Health}, Hunger: {animal.Hunger}";
+            Raylib.DrawText(infoText, startX + 10, startY + 10, 20, Color.WHITE); // Adjust text positioning as needed
+
+            // Animal Image
+            Texture2D texture = GetTextureForAnimal(animal);
+            Rectangle sourceRect = new Rectangle(0, 0, texture.Width / 2, texture.Height); // Update this according to your sprite sheet
+            float scale = 4.0f; // Scale up the animal image
+            Rectangle destRect = new Rectangle(startX + 10, startY + 40, sourceRect.Width * scale, sourceRect.Height * scale);
+            Raylib.DrawTexturePro(texture, sourceRect, destRect, new Vector2(0, 0), 0.0f, Color.WHITE);
+
+            // Background for feed button
+            Rectangle feedButtonRect = new Rectangle(startX + 250, startY + 40, 80, 30); // Adjust position and size as needed
+            Raylib.DrawRectangleRec(feedButtonRect, new Color(0, 128, 0, 255)); // Green background
+            Raylib.DrawRectangleLinesEx(feedButtonRect, 2, Color.BLACK); // Black border for the feed button
+
+            // Feed button text
+            Raylib.DrawText("Feed", (int)feedButtonRect.X + 20, (int)feedButtonRect.Y + 5, 20, Color.WHITE);
+
+            // Implement the logic to check if the feed button is clicked
+            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), feedButtonRect))
+            {
+                // Feed the animal
+                //FeedAnimal(animal, player); // You'll need to implement this method based on your game logic
+            }
+        }
         // Function to draw the overlay for shopping animals
-        static float scrollY = 0;
         static void DrawShopAnimalsOverlay(Shop shop, Player player)
         {
             // Handle mouse wheel scroll (reversed direction)
             float mouseWheelMove = Raylib.GetMouseWheelMove();
-            scrollY -= mouseWheelMove * 300; // Now scrolling up moves up, and down moves down
+            scrollY -= mouseWheelMove * 100; // Now scrolling up moves up, and down moves down
 
             // Calculate the total content height
             float contentHeight = shop.itemsForSale.OfType<Animal>().Count() * 70;
@@ -297,7 +388,6 @@ namespace CustomProgram
         {
             return desiredHeight / (float)texture.Height; // Ensure the scale is a float
         }
-
 
         static void DrawShopFeedOverlay(Shop shop, Player player)
         {
@@ -434,7 +524,6 @@ namespace CustomProgram
                     return gameManager.defaultTexture;
             }
         }
-
         static void DrawCloseButton()
         {
             // Draw the "Close" button consistently for all overlays
@@ -448,6 +537,8 @@ namespace CustomProgram
                 if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), closeButtonRect))
                 {
                     currentState = GameState.MainGame;
+                    scrollY = 0;
+                    scrollYFeedOverlay = 0;
                 }
             }
         }
