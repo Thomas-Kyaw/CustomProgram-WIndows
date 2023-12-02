@@ -58,5 +58,10 @@ namespace CustomProgram
         {
             get { return imagePath; }
         }
+
+        public ProduceType Type
+        {
+            get { return type; }
+        }
     }
 }

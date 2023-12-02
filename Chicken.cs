@@ -47,7 +47,7 @@ namespace CustomProgram
                 int produceType = random.Next(2); // Generates 0 or 1
                 Produce produce = produceType == 0
                     ? new Produce("Egg", 30f, ProduceType.Egg)
-                    : new Produce("Chicken", 45f, ProduceType.ChickenMeat);
+                    : new Produce("ChickenMeat", 45f, ProduceType.ChickenMeat);
 
                 produces.Add(produce);
 

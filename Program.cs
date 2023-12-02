@@ -3,6 +3,8 @@ using Raylib_cs;
 using System.Numerics;
 using System.Collections.Generic;
 using static System.Reflection.Metadata.BlobBuilder;
+using System.Linq;
+using System.ComponentModel;
 
 namespace CustomProgram
 {
@@ -153,9 +155,6 @@ namespace CustomProgram
 
         static void DrawOverlay(GameState state)
         {
-            // Depending on the state, you will draw different overlays
-            // Here is where the implementation of the overlay rendering logic is put
-            // This could be a simple color change, a new set of buttons, information display, etc.
             switch (state)
             {
                 case GameState.Cow:
@@ -185,7 +184,7 @@ namespace CustomProgram
                     // Render bag overlay
                     break;
                 case GameState.Inventory:
-                    // Render bag overlay
+                    DrawInventoryOverlay(gameManager.Player);
                     break;
                 default:
                     break;
@@ -195,7 +194,7 @@ namespace CustomProgram
         static void RenderPlotsAndAnimals()
         {
             // Define the number of animals per row based on the plot size and desired animal size
-            int animalsPerRow = 4; // Adjust the number based on the size of your plots
+            int animalsPerRow = 4; 
 
             for (int i = 0; i < gameManager.Player.Plots.Count; i++)
             {
@@ -206,7 +205,7 @@ namespace CustomProgram
 
                 // Define the size of each animal within the plot
                 // Assuming we want each animal to be 1/4th the width of a plot and considering some spacing
-                float animalSize = plotSize / (animalsPerRow + 1.0f); // Adjust the divisor for the size you want
+                float animalSize = plotSize / (animalsPerRow + 1.0f); 
 
                 // Calculate the horizontal and vertical spacing between the animals
                 float spacing = animalSize / 4.0f; // Give some space between animals
@@ -292,7 +291,7 @@ namespace CustomProgram
 
             // Animal Image
             Texture2D texture = GetTextureForAnimal(animal);
-            Rectangle sourceRect = new Rectangle(0, 0, texture.Width / 2, texture.Height); // Update this according to your sprite sheet
+            Rectangle sourceRect = new Rectangle(0, 0, texture.Width / 2, texture.Height);
             float scale = 4.0f; // Scale up the animal image
             Rectangle destRect = new Rectangle(startX + 10, startY + 40, sourceRect.Width * scale, sourceRect.Height * scale);
             Raylib.DrawTexturePro(texture, sourceRect, destRect, new Vector2(0, 0), 0.0f, Color.WHITE);
@@ -309,7 +308,7 @@ namespace CustomProgram
             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), feedButtonRect))
             {
                 // Feed the animal
-                //FeedAnimal(animal, player); // You'll need to implement this method based on your game logic
+                //FeedAnimal(animal, player); 
             }
         }
         // Function to draw the overlay for shopping animals
@@ -384,9 +383,103 @@ namespace CustomProgram
         }
 
         // Helper function to calculate the scale factor based on desired height
-        static float CalculateAnimalScaleForTexture(Texture2D texture, int desiredHeight)
+        static float scrollYInventory = 0;
+
+        // Main method to draw the inventory overlay
+        static void DrawInventoryOverlay(Player player)
         {
-            return desiredHeight / (float)texture.Height; // Ensure the scale is a float
+            const int itemHeight = 100;
+            const int padding = 10;
+            const int topOffset = 50;
+
+            // Set up for scrolling
+            float mouseWheelMove = Raylib.GetMouseWheelMove();
+            scrollYInventory -= mouseWheelMove * 20; // Adjust scroll speed as necessary
+
+            // Get all items and group them by type
+            var sellableItemsGrouped = player.Inventory.SellableItems
+                .GroupBy(item => item.name)
+                .Select(group => new
+                {
+                    Name = group.Key,
+                    Count = group.Count(),
+                    Price = group.First().sellPrice,
+                    Texture = GetTextureForItem(group.Key, gameManager) // You'll need to implement this method
+                });
+
+            var buyableItemsGrouped = player.Inventory.BuyableItems
+                .GroupBy(item => item.name)
+                .Select(group => new
+                {
+                    Name = group.Key,
+                    Count = group.Count(),
+                    Price = group.First().purchasePrice,
+                    Texture = GetTextureForItem(group.Key, gameManager) // You'll need to implement this method
+                });
+
+            // Combine both groups for display
+            var combinedItemsGrouped = sellableItemsGrouped.Concat(buyableItemsGrouped).ToList();
+
+            // Calculate the total content height
+            float contentHeight = combinedItemsGrouped.Count * (itemHeight + padding) + padding;
+
+            // Clamp scrollY to prevent scrolling beyond the content
+            float maxScroll = Math.Max(0, contentHeight - Raylib.GetScreenHeight());
+            scrollYInventory = Math.Clamp(scrollYInventory, 0, maxScroll);
+
+            // Start Y position, adjusted by the current scroll position
+            int startY = padding + topOffset - (int)scrollYInventory;
+
+            // Draw each item's information
+            foreach (var item in combinedItemsGrouped)
+            {
+                DrawItemInfo(item.Name, item.Count, item.Price, item.Texture, 50, startY);
+                startY += itemHeight + padding; // Move to the next item position
+            }
+
+            DrawCloseButton(); // You'll need to implement this method if it's not already done
+        }
+
+        // Method to get the corresponding texture for a given item name.
+        // This will use the type name to decide which texture to fetch from the GameManager.
+        static Texture2D GetTextureForItem(string itemName, GameManager gameManager)
+        {
+            if (Enum.TryParse<ProduceType>(itemName, out var produceType))
+            {
+                return GetTextureForProduce(produceType);
+            }
+            else
+            {
+                // Updated logic for FeedType parsing
+                string feedTypeName = itemName.Substring(0, itemName.IndexOf(" Feed"));
+                if (Enum.TryParse<FeedType>(feedTypeName, out var feedType))
+                {
+                    return GetTextureForFeed(feedType);
+                }
+            }
+
+            return gameManager.defaultTexture;
+        }
+
+        static void DrawItemInfo(string name, int count, float price, Texture2D texture, int startX, int startY)
+        {
+            int padding = 10; // Padding between items
+            Rectangle infoRect = new Rectangle(startX, startY, Raylib.GetScreenWidth() - 2 * startX, 60); // Full width minus padding
+            Raylib.DrawRectangleRec(infoRect, new Color(200, 200, 200, 255)); // Slightly darker background for contrast
+            Raylib.DrawRectangleLinesEx(infoRect, 1, Color.BLACK); // Border for clarity
+
+            // Item information text
+            string infoText = $"{name} - Count: {count}, Price: ${price}";
+            Raylib.DrawText(infoText, startX + padding, startY + padding, 20, Color.BLACK); // Draw text inside the rectangle
+
+            // Scale factor for the texture
+            float scaleFactor = 5.0f; // Adjust this value as needed to fit the texture within the infoRect
+
+            // Position for the scaled texture
+            Vector2 texturePosition = new Vector2(startX + infoRect.Width - (texture.Width * scaleFactor) - padding,
+                                                  startY + (infoRect.Height - (texture.Height * scaleFactor)) / 2);
+            // Draw the scaled texture
+            Raylib.DrawTextureEx(texture, texturePosition, 0, scaleFactor, Color.WHITE);
         }
 
         static void DrawShopFeedOverlay(Shop shop, Player player)
@@ -455,6 +548,12 @@ namespace CustomProgram
         }
 
         // Helper function to calculate the scale factor based on desired height
+        static float CalculateProduceScaleForTexture(Texture2D texture, int desiredHeight)
+        {
+            return desiredHeight / (float)texture.Height;
+        }
+
+        // Helper function to calculate the scale factor based on desired height
         static float CalculateFeedScaleForTexture(Texture2D texture, int desiredHeight)
         {
             return desiredHeight / (float)texture.Height; // Ensure the scale is a float
@@ -487,6 +586,33 @@ namespace CustomProgram
                 return gameManager.defaultTexture;
         }
 
+        static public Texture2D GetTextureForProduce(ProduceType type)
+        {
+            switch (type)
+            {
+                case ProduceType.Beef:
+                    return gameManager.beefTexture;
+                case ProduceType.Milk:
+                    return gameManager.milkTexture;
+                case ProduceType.Pork:
+                    return gameManager.porkTexture;
+                case ProduceType.GoatMilk:
+                    return gameManager.goatMilkTexture;
+                case ProduceType.GoatMeat:
+                    return gameManager.goatMeatTexture;
+                case ProduceType.ChickenMeat:
+                    return gameManager.chickenMeatTexture;
+                case ProduceType.Egg:
+                    return gameManager.eggTexture;
+                case ProduceType.Wool:
+                    return gameManager.woolTexture;
+                case ProduceType.Lamb:
+                    return gameManager.lambTexture;
+                default:
+                    return gameManager.defaultTexture; // Some default texture if needed
+            }
+        }
+        
         static public Texture2D GetTextureForPlot(Plot plot)
         {
             switch (plot.Type)

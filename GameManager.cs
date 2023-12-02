@@ -37,7 +37,16 @@ namespace CustomProgram
         public Texture2D pigTexture;
         public Texture2D sheepTexture;
         public Texture2D goatTexture;
+        public Texture2D beefTexture;
 
+        public Texture2D milkTexture;
+        public Texture2D porkTexture;
+        public Texture2D goatMeatTexture;
+        public Texture2D goatMilkTexture;
+        public Texture2D chickenMeatTexture;
+        public Texture2D eggTexture;
+        public Texture2D woolTexture;
+        public Texture2D lambTexture;
         public GameManager(string playerName)
         {
             timeProvider = new RealTimeProvider();
@@ -112,6 +121,17 @@ namespace CustomProgram
              pigTexture = Raylib.LoadTexture("assets/Pig.png");
              goatTexture = Raylib.LoadTexture("assets/Goat.png");
              sheepTexture = Raylib.LoadTexture("assets/Sheep.png");
+
+            beefTexture = Raylib.LoadTexture("assets/Beef.png");
+            milkTexture = Raylib.LoadTexture("assets/CowMilk.png");
+            porkTexture = Raylib.LoadTexture("assets/Pork.png");
+            goatMeatTexture = Raylib.LoadTexture("assets/GoatMeat.png");
+            goatMilkTexture = Raylib.LoadTexture("assets/GoatMilk.png");
+            eggTexture = Raylib.LoadTexture("assets/Egg.png");
+            chickenMeatTexture = Raylib.LoadTexture("assets/ChickenMeat.png");
+            woolTexture = Raylib.LoadTexture("assets/Wool.png");
+            lambTexture = Raylib.LoadTexture("assets/Lamb.png");
+
         }
 
         public void UnloadTextures()
@@ -138,6 +158,16 @@ namespace CustomProgram
             Raylib.UnloadTexture(chickenTexture);
             Raylib.UnloadTexture(sheepTexture);
             Raylib.UnloadTexture(pigTexture);
+
+            Raylib.UnloadTexture(beefTexture);
+            Raylib.UnloadTexture(milkTexture);
+            Raylib.UnloadTexture(porkTexture);
+            Raylib.UnloadTexture(goatMeatTexture);
+            Raylib.UnloadTexture(goatMilkTexture);
+            Raylib.UnloadTexture(chickenMeatTexture);
+            Raylib.UnloadTexture(eggTexture);
+            Raylib.UnloadTexture(woolTexture);
+            Raylib.UnloadTexture(lambTexture);
         }
 
         public void Update()
@@ -151,10 +181,7 @@ namespace CustomProgram
 
         public void Render()
         {
-            // Render the game state to the screen
-            //Player.Render();
-            //Shop.Render();
-            // Any other rendering code for your game entities
+            
         }
     }
 
