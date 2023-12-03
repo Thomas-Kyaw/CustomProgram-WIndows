@@ -75,7 +75,7 @@ namespace CustomProgram
                             if (Raylib.CheckCollisionPointRec(mousePoint, new Rectangle(plotPositions[i].X, plotPositions[i].Y, plotSize, plotSize)))
                             {
                                 currentState = (GameState)(i+1);
-                                Console.WriteLine("Clicked on plot index: " + i);  // Debug message
+                                
                                 break;
                             }
                         }
@@ -84,15 +84,14 @@ namespace CustomProgram
                         {
                             if (Raylib.CheckCollisionPointRec(mousePoint, new Rectangle(buttonPositions[i].X, buttonPositions[i].Y, buttonSize, buttonSize)))
                             {
-                                currentState = (GameState)(i + 9);
-                                Console.WriteLine("Clicked on plot index: " + i);  // Debug message
+                                currentState = (GameState)(i + 9);                               
                             }
                         }
                     }
                     else
                     {
                         // Handle clicks when the overlay window is open
-                        //currentState = GameState.MainGame; // This is a simplification. You would normally check what was clicked.
+                        //currentState = GameState.MainGame;
                     }
                 }
 
@@ -181,7 +180,7 @@ namespace CustomProgram
                     DrawShopFeedOverlay(gameManager.Shop, gameManager.Player);
                     break;
                 case GameState.SellProduce:
-                    // Render bag overlay
+                    DrawSellProduceOverlay(gameManager.Player);
                     break;
                 case GameState.Inventory:
                     DrawInventoryOverlay(gameManager.Player);
@@ -255,10 +254,12 @@ namespace CustomProgram
                 // Calculate the total content height and padding
                 int itemHeight = 100; // Height of each item (animal + feed button)
                 int padding = 10; // Padding between items
-                float contentHeight = animals.Count * (itemHeight + padding) + padding + extraTopPadding; // Total height of the content
+                float contentHeight = animals.Count * (itemHeight + padding) + padding + extraTopPadding;// Total height of the content
+
+                // Calculate maxScroll ensuring it's not less than 0
+                float maxScroll = Math.Max(0, contentHeight - Raylib.GetScreenHeight());
 
                 // Clamp scrollY to prevent scrolling beyond the content
-                float maxScroll = contentHeight - Raylib.GetScreenHeight();
                 scrollYFeedOverlay = Math.Clamp(scrollYFeedOverlay, 0, maxScroll);
 
                 // Start Y position, adjusted by the current scroll position and extra top padding
@@ -281,7 +282,7 @@ namespace CustomProgram
         static void DrawAnimalInfoAndFeedButton(Animal animal, int startX, int startY, Player player)
         {
             // Background for animal info
-            Rectangle infoRect = new Rectangle(startX, startY, 350, 100); // Adjust width and height as needed
+            Rectangle infoRect = new Rectangle(startX, startY, 400, 100); // Adjust width and height as needed
             Raylib.DrawRectangleRec(infoRect, new Color(169, 169, 169, 255)); // Light grey background
             Raylib.DrawRectangleLinesEx(infoRect, 2, Color.BLACK); // Black border for the info rectangle
 
@@ -291,8 +292,8 @@ namespace CustomProgram
 
             // Animal Image
             Texture2D texture = GetTextureForAnimal(animal);
-            Rectangle sourceRect = new Rectangle(0, 0, texture.Width / 2, texture.Height);
-            float scale = 4.0f; // Scale up the animal image
+            Rectangle sourceRect = new Rectangle(0, 0, texture.Width, texture.Height); // Use the full texture
+            float scale = 4.0f; // Scale up the animal image, adjust this value as needed
             Rectangle destRect = new Rectangle(startX + 10, startY + 40, sourceRect.Width * scale, sourceRect.Height * scale);
             Raylib.DrawTexturePro(texture, sourceRect, destRect, new Vector2(0, 0), 0.0f, Color.WHITE);
 
@@ -464,7 +465,11 @@ namespace CustomProgram
         static void DrawItemInfo(string name, int count, float price, Texture2D texture, int startX, int startY)
         {
             int padding = 10; // Padding between items
-            Rectangle infoRect = new Rectangle(startX, startY, Raylib.GetScreenWidth() - 2 * startX, 60); // Full width minus padding
+            int infoHeight = 100; // Increased height for additional button space
+
+            // Adjust the height of infoRect to accommodate the buttons
+            Rectangle infoRect = new Rectangle(startX, startY, Raylib.GetScreenWidth() - 2 * startX, infoHeight); // Adjusted height
+
             Raylib.DrawRectangleRec(infoRect, new Color(200, 200, 200, 255)); // Slightly darker background for contrast
             Raylib.DrawRectangleLinesEx(infoRect, 1, Color.BLACK); // Border for clarity
 
@@ -476,8 +481,11 @@ namespace CustomProgram
             float scaleFactor = 5.0f; // Adjust this value as needed to fit the texture within the infoRect
 
             // Position for the scaled texture
-            Vector2 texturePosition = new Vector2(startX + infoRect.Width - (texture.Width * scaleFactor) - padding,
-                                                  startY + (infoRect.Height - (texture.Height * scaleFactor)) / 2);
+            Vector2 texturePosition = new Vector2(
+                startX + infoRect.Width - (texture.Width * scaleFactor) - padding,
+                startY + (infoRect.Height - (texture.Height * scaleFactor)) / 2
+            );
+
             // Draw the scaled texture
             Raylib.DrawTextureEx(texture, texturePosition, 0, scaleFactor, Color.WHITE);
         }
@@ -542,6 +550,121 @@ namespace CustomProgram
                 }
 
                 startY += itemHeight + padding; // Increase the spacing for the next item
+            }
+
+            DrawCloseButton();
+        }
+
+        static float scrollYSellProduceOverlay = 0;
+
+        // Constants for button sizes and positions
+        const int buttonWidth = 20;
+        const int buttonHeight = 20;
+        const int sellButtonWidth = 60;
+        const int sellButtonHeight = 20;
+        const int buttonSpacing = 5; // Space between buttons
+        const int infoHeight = 80; // Height of the info box to fit text and buttons
+        static Dictionary<string, int> quantitiesToSell = new Dictionary<string, int>();
+        static void DrawSellProduceOverlay(Player player)
+        {
+            const int itemHeight = 120; // Increased height for vertical spacing
+            const int padding = 10;
+            const int topOffset = 50;
+            const int startX = 50; // X position where the item box starts
+            const int buttonStartX = startX + 300; // X position where buttons start
+
+            // Set up for scrolling
+            float mouseWheelMove = Raylib.GetMouseWheelMove();
+            scrollYSellProduceOverlay -= mouseWheelMove * 20; // Adjust scroll speed as necessary
+
+            // Get all sellable items and group them by type
+            var sellableItemsGrouped = player.Inventory.SellableItems
+                .OfType<Produce>() // Ensure we only deal with Produce objects
+                .GroupBy(item => item.name)
+                .Select(group => new
+                {
+                    Name = group.Key,
+                    Count = group.Count(),
+                    Price = group.First().sellPrice,
+                    Texture = GetTextureForProduce(group.First().Type) // Now correctly accesses the Type
+                }).ToList();
+
+            // Calculate the total content height
+            float contentHeight = sellableItemsGrouped.Count * (itemHeight + padding) + padding + topOffset;
+
+            // Clamp scrollY to prevent scrolling beyond the content
+            float maxScroll = Math.Max(0, contentHeight - Raylib.GetScreenHeight());
+            scrollYSellProduceOverlay = Math.Clamp(scrollYSellProduceOverlay, 0, maxScroll);
+
+            // Start Y position, adjusted by the current scroll position
+            int startY = padding + topOffset - (int)scrollYSellProduceOverlay;
+
+            // Draw each item's information
+            foreach (var item in sellableItemsGrouped)
+            {
+                DrawItemInfo(item.Name, item.Count, item.Price, item.Texture, 50, startY);
+
+                // Calculate positions for "To Sell" text and buttons based on the infoRect width
+                int toSellTextStartX = startX + 200; // Adjust this value as needed
+                int buttonsStartX = toSellTextStartX + 100; // Adjust this value as needed
+
+                // Initialize quantity to sell if not already done
+                if (!quantitiesToSell.ContainsKey(item.Name))
+                {
+                    quantitiesToSell[item.Name] = 0;
+                }
+
+                // Draw "+" and "-" buttons
+                Rectangle plusButtonRect = new Rectangle(buttonsStartX, startY + 30, buttonWidth, buttonHeight);
+                Rectangle minusButtonRect = new Rectangle(buttonsStartX + buttonWidth + buttonSpacing, startY + 30, buttonWidth, buttonHeight);
+                Rectangle sellButtonRect = new Rectangle(buttonsStartX + 2 * (buttonWidth + buttonSpacing), startY + 30, sellButtonWidth + 30 , sellButtonHeight + 30);
+
+                Raylib.DrawRectangleRec(plusButtonRect, Color.GRAY);
+                Raylib.DrawRectangleRec(minusButtonRect, Color.GRAY);
+                Raylib.DrawRectangleRec(sellButtonRect, Color.GREEN);
+
+                Raylib.DrawText("+", (int)plusButtonRect.X + 10, (int)plusButtonRect.Y + 5, 20, Color.WHITE);
+                Raylib.DrawText("-", (int)minusButtonRect.X + 10, (int)minusButtonRect.Y + 5, 20, Color.WHITE);
+                Raylib.DrawText("Sell", (int)sellButtonRect.X + 20, (int)sellButtonRect.Y + 5, 20, Color.WHITE);
+
+                Raylib.DrawText($"To Sell: {quantitiesToSell[item.Name]}", toSellTextStartX, startY + 30, 20, Color.WHITE);
+
+                // Check if the buttons are clicked
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+                {
+                    if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), plusButtonRect))
+                    {
+                        // Increase item count logic
+                        if (quantitiesToSell[item.Name] < item.Count)
+                        {
+                            quantitiesToSell[item.Name]++;
+                        }
+                    }
+                    else if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), minusButtonRect))
+                    {
+                        // Decrease item count logic
+                        if (quantitiesToSell[item.Name] > 0)
+                        {
+                            quantitiesToSell[item.Name]--;
+                        }
+                    }
+                    else if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), sellButtonRect))
+                    {
+                        // Find the specific ISellable item based on the name
+                        ISellable itemToSell = player.Inventory.SellableItems
+                            .OfType<Produce>()
+                            .FirstOrDefault(p => p.name == item.Name);
+
+                        if (itemToSell != null)
+                        {
+                            // Sell item logic
+                            gameManager.Shop.SellItem(itemToSell, player, quantitiesToSell[item.Name]);
+                            quantitiesToSell[item.Name] = 0; // Reset the quantity after selling
+                        }
+                    }
+                }
+
+                startY += itemHeight + padding; // Move to the next item position
             }
 
             DrawCloseButton();

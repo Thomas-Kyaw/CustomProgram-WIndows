@@ -36,12 +36,12 @@ namespace CustomProgram
         public void SellItem(ISellable item, Player player, int quantity)
         {
             // Check if the player has enough of the item to sell
-            if(player.Inventory.CheckSellableQuantity(item) > 0)
+            if (player.Inventory.CheckSellableQuantity(item) >= quantity)
             {
                 // Subtract from player's inventory
-                player.Inventory.RemoveSellableItem(item);
+                player.Inventory.RemoveSellableItem(item, quantity);
                 // Add the sell price to player's coins
-                player.Coins += 10;
+                player.Coins += item.sellPrice * quantity;
             }
         }
 

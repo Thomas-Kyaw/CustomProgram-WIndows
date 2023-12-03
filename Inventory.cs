@@ -45,8 +45,21 @@ namespace CustomProgram
         }
         public int CheckSellableQuantity(ISellable item)
         {
-            // Return the quantity of the item in the inventory
-            return sellableItems.Count; 
+            // Return the quantity of the specific type of item in the inventory
+            return sellableItems.Count(i => i.name == item.name);
+        }
+
+        public void RemoveSellableItem(ISellable item, int quantity)
+        {
+            // Remove the specified quantity of the specific type of item from the inventory
+            for (int q = 0; q < quantity; q++)
+            {
+                var itemToRemove = sellableItems.FirstOrDefault(i => i.name == item.name);
+                if (itemToRemove != null)
+                {
+                    sellableItems.Remove(itemToRemove);
+                }
+            }
         }
         public List<ISellable> SellableItems
         {
