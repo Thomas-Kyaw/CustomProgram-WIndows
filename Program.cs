@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Linq;
 using System.ComponentModel;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace CustomProgram
 {
@@ -15,6 +16,20 @@ namespace CustomProgram
         static Vector2[] plotPositions;
         static int plotSize = 150;
         static float scrollY = 0;
+        static float scrollYSellProduceOverlay = 0;
+        static float scrollYFeedOverlay = 0;
+        static float scrollYInventory = 0;
+
+        // Constants for button sizes and positions
+        const int buttonWidth = 20;
+        const int buttonHeight = 20;
+        const int sellButtonWidth = 60;
+        const int sellButtonHeight = 20;
+        const int buttonSpacing = 5; // Space between buttons
+        const int infoHeight = 80; // Height of the info box to fit text and buttons
+
+        static bool isGameRunning = true;
+
         public static void Main()
         {
             gameManager = new GameManager("PlayerName");
@@ -55,16 +70,20 @@ namespace CustomProgram
                     offsetY + i * (buttonSize + verticalSpacing)
                 );
             }
-            // TODO - Need to set the plot in game manager
-            while (!Raylib.WindowShouldClose())
+            while (!Raylib.WindowShouldClose() && isGameRunning)
             {
                 gameManager.Update();
+                string text = $"Coins: {gameManager.Player.Coins}";
                 // Check if the Escape key is pressed to return to the main game state
                 if (Raylib.IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
                     currentState = GameState.MainGame;
                 }
-
+                // Check for game over condition
+                if (gameManager.Player.Reputation <= 0)
+                {
+                    currentState = GameState.GameOver;
+                }
                 if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                 {
                     Vector2 mousePoint = Raylib.GetMousePosition();
@@ -84,14 +103,9 @@ namespace CustomProgram
                         {
                             if (Raylib.CheckCollisionPointRec(mousePoint, new Rectangle(buttonPositions[i].X, buttonPositions[i].Y, buttonSize, buttonSize)))
                             {
-                                currentState = (GameState)(i + 9);                               
+                                currentState = (GameState)(i + 10);                               
                             }
                         }
-                    }
-                    else
-                    {
-                        // Handle clicks when the overlay window is open
-                        //currentState = GameState.MainGame;
                     }
                 }
 
@@ -115,6 +129,7 @@ namespace CustomProgram
                     for (int i = 0; i < plotPositions.Length; i++)
                     {
                         Raylib.DrawTextureEx(textures[i], plotPositions[i], 0.0f, plotSize / (float)textures[i].Width, Color.WHITE);
+                        Raylib.DrawText(text, 520, 10, 20, Color.BLACK);
                         Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), plotNames[i], 20, 1);
                         Raylib.DrawText(plotNames[i],
                                         (int)(plotPositions[i].X + (plotSize - textSize.X) / 2),
@@ -138,6 +153,14 @@ namespace CustomProgram
 
                     RenderPlotsAndAnimals();
                 }
+                else if(currentState == GameState.GameOver)
+                {
+                    DrawGameOverScreen();
+                    if (!isGameRunning) // Check if the game should continue running
+                    {
+                        break; // Exit the loop if the game is over
+                    }
+                }
                 else
                 {
                     // Render the overlay for the current game state
@@ -154,41 +177,52 @@ namespace CustomProgram
 
         static void DrawOverlay(GameState state)
         {
+            string text = $"Coins: {gameManager.Player.Coins}";
+            Raylib.DrawText(text, 500, 10, 20, Color.BLACK);
             switch (state)
             {
                 case GameState.Cow:
                     DrawAnimalFeedOverlay(PlotType.CowPlot ,gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.Chicken:
                     DrawAnimalFeedOverlay(PlotType.ChickenPlot, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.Pig:
                     DrawAnimalFeedOverlay(PlotType.PigPlot, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.Goat:
                     DrawAnimalFeedOverlay(PlotType.GoatPlot, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.Sheep:
                     DrawAnimalFeedOverlay(PlotType.SheepPlot, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.ShopAnimals:
                     // Render shop animals overlay
                     DrawShopAnimalsOverlay(gameManager.Shop, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.BuyFeed:
                     // Render buy feed overlay
                     DrawShopFeedOverlay(gameManager.Shop, gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.SellProduce:
                     DrawSellProduceOverlay(gameManager.Player);
+                    DrawCloseButton();
                     break;
                 case GameState.Inventory:
                     DrawInventoryOverlay(gameManager.Player);
+                    DrawCloseButton();
                     break;
+                // TODO - add the last 3 stages
                 default:
                     break;
             }
-            DrawCloseButton();
         }
         static void RenderPlotsAndAnimals()
         {
@@ -233,8 +267,41 @@ namespace CustomProgram
                 }
             }
         }
+        static void DrawGameOverScreen()
+        {
+            // Darken the background
+            Raylib.DrawRectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), new Color(0, 0, 0, 180));
 
-        static float scrollYFeedOverlay = 0;
+            // Draw "Game Over" text in the center of the screen
+            string gameOverText = "Game Over";
+            int fontSize = 40;
+            Color textColor = Color.RED;
+            Vector2 textSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), gameOverText, fontSize, 1);
+            Raylib.DrawText(
+                gameOverText,
+                Raylib.GetScreenWidth() / 2 - (int)(textSize.X / 2),
+                Raylib.GetScreenHeight() / 2 - (int)(textSize.Y / 2),
+                fontSize,
+                textColor
+            );
+
+            // Optionally, provide a prompt to restart or quit
+            string restartText = "Press [Q] to Quit";
+            int smallFontSize = 20;
+            Vector2 restartTextSize = Raylib.MeasureTextEx(Raylib.GetFontDefault(), restartText, smallFontSize, 1);
+            Raylib.DrawText(
+                restartText,
+                Raylib.GetScreenWidth() / 2 - (int)(restartTextSize.X / 2),
+                Raylib.GetScreenHeight() / 2 - (int)(textSize.Y / 2) + 50,
+                smallFontSize,
+                Color.WHITE
+            );
+
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_Q))
+            {
+                isGameRunning = false;
+            }
+        }
 
         static void DrawAnimalFeedOverlay(PlotType plotType, Player player)
         {
@@ -306,12 +373,47 @@ namespace CustomProgram
             Raylib.DrawText("Feed", (int)feedButtonRect.X + 20, (int)feedButtonRect.Y + 5, 20, Color.WHITE);
 
             // Implement the logic to check if the feed button is clicked
+            // Implement the logic to check if the feed button is clicked
+            // Implement the logic to check if the feed button is clicked
             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), feedButtonRect))
             {
-                // Feed the animal
-                //FeedAnimal(animal, player); 
+                // Get the feed type based on the animal
+                FeedType requiredFeedType = GetFeedType(animal);
+
+                // Find the feed item in the player's inventory
+                Feed feedItem = player.Inventory.BuyableItems.OfType<Feed>().FirstOrDefault(f => f.Type == requiredFeedType);
+
+                // Check if the feed item is available in the inventory
+                if (feedItem != null)
+                {
+                        // Feed the animal
+                        animal.Feed(requiredFeedType);
+                        player.Inventory.RemoveBuyableItem(feedItem);
+                }
             }
         }
+        static FeedType GetFeedType(Animal animal)
+        {
+            if (animal is Cow)
+            {
+                return FeedType.CowFeed;
+            }
+            else if (animal is Chicken)
+            {
+                return FeedType.ChickenFeed;
+            }
+            else if (animal is Goat)
+            {
+                return FeedType.GoatFeed;
+            }
+            else if (animal is Sheep)
+            {
+                return FeedType.SheepFeed;
+            }
+            else
+                return FeedType.PigFeed;
+        }
+
         // Function to draw the overlay for shopping animals
         static void DrawShopAnimalsOverlay(Shop shop, Player player)
         {
@@ -384,7 +486,6 @@ namespace CustomProgram
         }
 
         // Helper function to calculate the scale factor based on desired height
-        static float scrollYInventory = 0;
 
         // Main method to draw the inventory overlay
         static void DrawInventoryOverlay(Player player)
@@ -555,15 +656,6 @@ namespace CustomProgram
             DrawCloseButton();
         }
 
-        static float scrollYSellProduceOverlay = 0;
-
-        // Constants for button sizes and positions
-        const int buttonWidth = 20;
-        const int buttonHeight = 20;
-        const int sellButtonWidth = 60;
-        const int sellButtonHeight = 20;
-        const int buttonSpacing = 5; // Space between buttons
-        const int infoHeight = 80; // Height of the info box to fit text and buttons
         static Dictionary<string, int> quantitiesToSell = new Dictionary<string, int>();
         static void DrawSellProduceOverlay(Player player)
         {

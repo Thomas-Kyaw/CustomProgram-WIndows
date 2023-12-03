@@ -61,6 +61,10 @@ namespace CustomProgram
             {
                 hunger = Math.Min(hunger + GetFeedValue(feedType), 100f);
                 lastHungerUpdateTime = Raylib.GetTime(); // Reset the hunger update timer after feeding
+                if(hunger >= 90)
+                {
+                    health = 130f;
+                }
             }
         }
 

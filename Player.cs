@@ -8,7 +8,7 @@ namespace CustomProgram
         private string name;
         private Inventory inventory;
         private float coins;
-        private int reputation;
+        public int reputation;
 
         private List<Plot> plots;
 
@@ -16,7 +16,7 @@ namespace CustomProgram
         {
             name = _name;
             inventory = new Inventory();
-            coins = 1000; // Initial amount of coins
+            coins = 10000; // Initial amount of coins
             reputation = 100; // Initial reputation
             plots = new List<Plot>();
         }

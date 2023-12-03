@@ -75,10 +75,17 @@ namespace CustomProgram
                 return false;
             }
 
-            animal.OnDeath += RemoveAnimal;
+            animal.OnDeath += Animal_OnDeath;
             animals.Add(animal);
             return true;
         }
+        private void Animal_OnDeath(Animal animal)
+        {
+            owner.Reputation -= 100; // Decrease the player's reputation by 5
+            owner.Reputation = Math.Max(0, owner.Reputation); // Ensure reputation doesn't go below 0
+            RemoveAnimal(animal); // Remove the dead animal
+        }
+
         private bool IsCorrectAnimalType(Animal animal)
         {
             // Logic to check if the animal type matches the plot type

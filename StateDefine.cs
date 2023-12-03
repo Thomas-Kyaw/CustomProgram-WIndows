@@ -20,6 +20,7 @@ namespace CustomProgram
         Inventory,
         Bag,
         Animal,
-        Feed
+        Feed,
+        GameOver
     }
 }

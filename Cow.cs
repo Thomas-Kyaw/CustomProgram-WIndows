@@ -19,11 +19,11 @@ namespace CustomProgram
             double currentTime = base.timeProvider.GetCurrentTime();
             if (currentTime - lastHungerUpdateTime >= hungerDecrementTime && isAlive)
             {
-                hunger -= 9f; // original value is 9f
+                hunger -= 100f; // original value is 9f
                 lastHungerUpdateTime = currentTime;
                 if (hunger <= 0)
                 {
-                    health -= 11f; //original value is 11f
+                    health -= 100f; //original value is 11f
                     hunger = 0;
                 }
             }
@@ -63,6 +63,10 @@ namespace CustomProgram
             {
                 hunger = Math.Min(hunger + GetFeedValue(feedType), 100f);
                 lastHungerUpdateTime = Raylib.GetTime(); // Reset the hunger update timer after feeding
+                if(hunger >= 80)
+                {
+                    health = 150f;
+                }
             }
         }
 
