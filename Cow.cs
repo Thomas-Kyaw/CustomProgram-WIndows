@@ -19,11 +19,11 @@ namespace CustomProgram
             double currentTime = base.timeProvider.GetCurrentTime();
             if (currentTime - lastHungerUpdateTime >= hungerDecrementTime && isAlive)
             {
-                hunger -= 100f; // original value is 9f
+                hunger -= 9f; // original value is 9f
                 lastHungerUpdateTime = currentTime;
                 if (hunger <= 0)
                 {
-                    health -= 100f; //original value is 11f
+                    health -= 11f; //original value is 11f
                     hunger = 0;
                 }
             }

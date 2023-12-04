@@ -81,7 +81,7 @@ namespace CustomProgram
         }
         private void Animal_OnDeath(Animal animal)
         {
-            owner.Reputation -= 100; // Decrease the player's reputation by 5
+            owner.Reputation -= 7; // Decrease the player's reputation by 5
             owner.Reputation = Math.Max(0, owner.Reputation); // Ensure reputation doesn't go below 0
             RemoveAnimal(animal); // Remove the dead animal
         }

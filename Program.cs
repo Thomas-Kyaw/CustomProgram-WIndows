@@ -183,43 +183,43 @@ namespace CustomProgram
             {
                 case GameState.Cow:
                     DrawAnimalFeedOverlay(PlotType.CowPlot ,gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.Chicken:
                     DrawAnimalFeedOverlay(PlotType.ChickenPlot, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.Pig:
                     DrawAnimalFeedOverlay(PlotType.PigPlot, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.Goat:
                     DrawAnimalFeedOverlay(PlotType.GoatPlot, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.Sheep:
                     DrawAnimalFeedOverlay(PlotType.SheepPlot, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.ShopAnimals:
                     // Render shop animals overlay
                     DrawShopAnimalsOverlay(gameManager.Shop, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.BuyFeed:
                     // Render buy feed overlay
                     DrawShopFeedOverlay(gameManager.Shop, gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.SellProduce:
                     DrawSellProduceOverlay(gameManager.Player);
-                    DrawCloseButton();
                     break;
                 case GameState.Inventory:
                     DrawInventoryOverlay(gameManager.Player);
-                    DrawCloseButton();
                     break;
-                // TODO - add the last 3 stages
+                // TODO - add the last 3 stages and reputation text
+                case GameState.Bag:
+                    DrawInventoryOverlay(gameManager.Player);
+                    break;
+                case GameState.Feed:
+                    FeedButtonOverlay(gameManager.Player);
+                    break;
+                case GameState.Animal:
+                    AnimalButtonOverlay(gameManager.Player);
+                    break;
                 default:
                     break;
             }
@@ -302,7 +302,6 @@ namespace CustomProgram
                 isGameRunning = false;
             }
         }
-
         static void DrawAnimalFeedOverlay(PlotType plotType, Player player)
         {
             // Overlay background
@@ -372,9 +371,6 @@ namespace CustomProgram
             // Feed button text
             Raylib.DrawText("Feed", (int)feedButtonRect.X + 20, (int)feedButtonRect.Y + 5, 20, Color.WHITE);
 
-            // Implement the logic to check if the feed button is clicked
-            // Implement the logic to check if the feed button is clicked
-            // Implement the logic to check if the feed button is clicked
             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), feedButtonRect))
             {
                 // Get the feed type based on the animal
@@ -485,7 +481,68 @@ namespace CustomProgram
             DrawCloseButton();
         }
 
-        // Helper function to calculate the scale factor based on desired height
+        static void AnimalButtonOverlay(Player player)
+        {
+            // Overlay background
+            Raylib.DrawRectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), new Color(0, 0, 0, 128));
+
+            // Combine all animals from all plots into a single list
+            List<Animal> allAnimals = player.Plots.SelectMany(p => p.Animals).ToList();
+
+            // Handle mouse wheel scroll for the overlay
+            float mouseWheelMove = Raylib.GetMouseWheelMove();
+            scrollYInventory -= mouseWheelMove * 100; // Scroll speed, adjust as necessary
+
+            // Calculate the total content height and padding
+            int itemHeight = 100; // Height of each item (animal info)
+            int padding = 10; // Padding between items
+            int extraTopPadding = 50; // Extra space to avoid overlap with the close button
+            float contentHeight = allAnimals.Count * (itemHeight + padding) + padding + extraTopPadding; // Total height of the content
+
+            // Calculate maxScroll ensuring it's not less than 0
+            float maxScroll = Math.Max(0, contentHeight - Raylib.GetScreenHeight());
+
+            // Clamp scrollY to prevent scrolling beyond the content
+            scrollYInventory = Math.Clamp(scrollYInventory, 0, maxScroll);
+
+            // Start Y position, adjusted by the current scroll position
+            int startY = padding + extraTopPadding - (int)scrollYInventory;
+
+            // Draw each animal's information
+            foreach (var animal in allAnimals)
+            {
+                DrawAnimalInfo(animal, padding, startY);
+                startY += itemHeight + padding; // Move to the next item position
+            }
+
+            // Check if there are no animals to display
+            if (!allAnimals.Any())
+            {
+                Raylib.DrawText("No animals available.", 50, extraTopPadding + 50, 20, Color.WHITE);
+            }
+
+            DrawCloseButton();
+        }
+
+        static void DrawAnimalInfo(Animal animal, int startX, int startY)
+        {
+            // Background for animal info
+            Rectangle infoRect = new Rectangle(startX, startY, 400, 100); // Adjust width and height as needed
+            Raylib.DrawRectangleRec(infoRect, new Color(169, 169, 169, 255)); // Light grey background
+            Raylib.DrawRectangleLinesEx(infoRect, 2, Color.BLACK); // Black border for the info rectangle
+
+            // Animal information text
+            string infoText = $"{animal.name} - Health: {animal.Health}, Hunger: {animal.Hunger}";
+            Raylib.DrawText(infoText, startX + 10, startY + 10, 20, Color.WHITE); // Adjust text positioning as needed
+
+            // Animal Image
+            Texture2D texture = GetTextureForAnimal(animal);
+            Rectangle sourceRect = new Rectangle(0, 0, texture.Width, texture.Height); // Use the full texture
+            float scale = 4.0f; // Scale up the animal image, adjust this value as needed
+            Rectangle destRect = new Rectangle(startX + 10, startY + 40, sourceRect.Width * scale, sourceRect.Height * scale);
+            Raylib.DrawTexturePro(texture, sourceRect, destRect, new Vector2(0, 0), 0.0f, Color.WHITE);
+        }
+
 
         // Main method to draw the inventory overlay
         static void DrawInventoryOverlay(Player player)
@@ -539,7 +596,50 @@ namespace CustomProgram
                 startY += itemHeight + padding; // Move to the next item position
             }
 
-            DrawCloseButton(); // You'll need to implement this method if it's not already done
+            DrawCloseButton(); 
+        }
+
+        static void FeedButtonOverlay(Player player)
+        {
+            // Overlay background
+            Raylib.DrawRectangle(0, 0, Raylib.GetScreenWidth(), Raylib.GetScreenHeight(), new Color(0, 0, 0, 128));
+            int extraTopPadding = 50; // Extra space at the top
+
+            // Combine all animals from all plots into a single list
+            List<Animal> allAnimals = player.Plots.SelectMany(p => p.Animals).ToList();
+
+            // Handle mouse wheel scroll for the feed overlay
+            float mouseWheelMove = Raylib.GetMouseWheelMove();
+            scrollYFeedOverlay -= mouseWheelMove * 100; // Scroll speed, adjust as necessary
+
+            // Calculate the total content height and padding
+            int itemHeight = 100; // Height of each item (animal + feed button)
+            int padding = 10; // Padding between items
+            float contentHeight = allAnimals.Count * (itemHeight + padding) + padding + extraTopPadding; // Total height of the content
+
+            // Calculate maxScroll ensuring it's not less than 0
+            float maxScroll = Math.Max(0, contentHeight - Raylib.GetScreenHeight());
+
+            // Clamp scrollY to prevent scrolling beyond the content
+            scrollYFeedOverlay = Math.Clamp(scrollYFeedOverlay, 0, maxScroll);
+
+            // Start Y position, adjusted by the current scroll position and extra top padding
+            int startY = padding + extraTopPadding - (int)scrollYFeedOverlay;
+
+            // Draw each animal's information and feed button
+            foreach (var animal in allAnimals)
+            {
+                DrawAnimalInfoAndFeedButton(animal, padding, startY, player);
+                startY += itemHeight + padding; // Move to the next item position
+            }
+
+            // Check if there are no animals to display
+            if (!allAnimals.Any())
+            {
+                Raylib.DrawText("No animals available to feed.", 50, extraTopPadding + 50, 20, Color.WHITE);
+            }
+
+            DrawCloseButton();
         }
 
         // Method to get the corresponding texture for a given item name.

@@ -16,7 +16,7 @@ namespace CustomProgram
 
         public override void Update()
         {
-            double currentTime = Raylib.GetTime();
+            double currentTime = base.timeProvider.GetCurrentTime();
             if (currentTime - lastHungerUpdateTime >= hungerDecrementTime && isAlive)
             {
                 hunger -= 8f; // Decrement hunger
